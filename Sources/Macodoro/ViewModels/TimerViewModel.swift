@@ -21,14 +21,11 @@ final class TimerViewModel: ObservableObject {
             // Timer callbacks run on the main RunLoop, so this is main-thread safe.
             self?.apply(state)
         }
+
+        AlertService.shared.requestPermission()
     }
 
     // MARK: - Formatted output
-
-    /// Time shown in the menu bar label.
-    var menuBarTitle: String {
-        phase == .idle ? "🍅" : formatted(timeRemaining)
-    }
 
     /// Time shown in the popover (shows configured work duration when idle).
     var displayTime: String {
@@ -65,9 +62,14 @@ final class TimerViewModel: ObservableObject {
     // MARK: - Private
 
     private func apply(_ state: PomodoroState) {
+        let previous = phase
         phase = state.phase
         timeRemaining = state.timeRemaining
         completedIterations = state.completedIterations
+
+        if state.phase != previous {
+            AlertService.shared.notify(for: state.phase, style: settings.alertStyle)
+        }
     }
 
     private func formatted(_ interval: TimeInterval) -> String {

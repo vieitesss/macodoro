@@ -10,8 +10,13 @@ struct MacodoroApp: App {
             MenuBarView()
                 .environmentObject(vm)
         } label: {
-            Text(vm.menuBarTitle)
-                .monospacedDigit()
+            HStack(spacing: 4) {
+                Image(systemName: "timer")
+                if vm.phase != .idle {
+                    Text(vm.displayTime)
+                        .monospacedDigit()
+                }
+            }
         }
         .menuBarExtraStyle(.window)
 
@@ -20,5 +25,6 @@ struct MacodoroApp: App {
             SettingsView()
                 .environmentObject(vm)
         }
+        .windowResizability(.contentSize)
     }
 }
