@@ -4,6 +4,13 @@ import MacodoroCore
 struct MenuBarView: View {
     @EnvironmentObject var vm: TimerViewModel
     @Environment(\.openSettings) private var openSettings
+    @State private var hoveredFooterOption: FooterOption?
+
+    private enum FooterOption {
+        case settings
+        case about
+        case quit
+    }
 
     var body: some View {
         VStack(spacing: 20) {
@@ -35,12 +42,48 @@ struct MenuBarView: View {
 
     private var iterationDots: some View {
         HStack(spacing: 8) {
-            ForEach(0..<vm.settings.iterationsBeforeBigRest, id: \.self) { i in
-                Circle()
-                    .fill(i < vm.completedIterations ? Color.accentColor : Color.secondary.opacity(0.25))
-                    .frame(width: 8, height: 8)
+            ForEach(0..<vm.settings.iterationsBeforeBigRest, id: \.self) { cycleIndex in
+                VStack(spacing: 0) {
+                    cycleBox(stageNumber: workStageNumber(for: cycleIndex))
+                    cycleBox(stageNumber: restStageNumber(for: cycleIndex))
+                }
             }
         }
+    }
+
+    private func workStageNumber(for cycleIndex: Int) -> Int {
+        cycleIndex * 2 + 1
+    }
+
+    private func restStageNumber(for cycleIndex: Int) -> Int {
+        cycleIndex * 2 + 2
+    }
+
+    private func cycleBox(stageNumber: Int) -> some View {
+        let isInProgress = stageNumber == vm.activeStageNumber
+        let isCompleted = stageNumber < vm.activeStageNumber
+
+        return RoundedRectangle(cornerRadius: 2, style: .continuous)
+            .fill(boxColor(isCompleted: isCompleted, isInProgress: isInProgress))
+            .frame(width: 16, height: 10)
+            .overlay(
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .stroke(boxBorderColor(isInProgress: isInProgress), lineWidth: isInProgress ? 1.5 : 0)
+            )
+    }
+
+    private func boxColor(isCompleted: Bool, isInProgress: Bool) -> Color {
+        if isInProgress {
+            return Color.accentColor.opacity(0.3)
+        } else if isCompleted {
+            return Color.accentColor
+        } else {
+            return Color.secondary.opacity(0.25)
+        }
+    }
+
+    private func boxBorderColor(isInProgress: Bool) -> Color {
+        isInProgress ? Color.accentColor : .clear
     }
 
     private var controls: some View {
@@ -69,12 +112,47 @@ struct MenuBarView: View {
     }
 
     private var footerButtons: some View {
-        VStack(spacing: 4) {
-            Button("Settings…") { openSettings() }
-                .buttonStyle(.plain)
-            Button("Quit") { NSApplication.shared.terminate(nil) }
-                .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
+        VStack(spacing: 1) {
+            footerButton("Settings…", option: .settings) {
+                NSApplication.shared.activate(ignoringOtherApps: true)
+                openSettings()
+            }
+            footerButton("About Macodoro", option: .about) {
+                NSApplication.shared.activate(ignoringOtherApps: true)
+                NSApplication.shared.orderFrontStandardAboutPanel(nil)
+            }
+            footerButton("Quit", option: .quit) {
+                NSApplication.shared.terminate(nil)
+            }
+        }
+        .padding(3)
+        .background(
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .fill(Color.primary.opacity(0.07))
+        )
+    }
+
+    private func footerButton(_ title: String, option: FooterOption, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 14, weight: .medium))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 3)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(hoveredFooterOption == option ? Color.white : Color.primary)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(hoveredFooterOption == option ? Color.accentColor : .clear)
+        )
+        .onHover { isHovering in
+            if isHovering {
+                hoveredFooterOption = option
+            } else if hoveredFooterOption == option {
+                hoveredFooterOption = nil
+            }
         }
     }
 }

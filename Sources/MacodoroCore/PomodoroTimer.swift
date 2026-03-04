@@ -68,7 +68,8 @@ public final class PomodoroTimer {
         notify()
     }
 
-    /// Advances to the next phase; keeps running if the timer was active.
+    /// Advances to the next phase.
+    /// Keeps running only if the timer was already active.
     public func skip() {
         let wasRunning = timer != nil
         advance(autostart: wasRunning)
@@ -103,7 +104,20 @@ public final class PomodoroTimer {
 
         switch state.phase {
         case .idle:
-            return
+            let newIterations = 1
+            if newIterations >= settings.iterationsBeforeBigRest {
+                state = PomodoroState(
+                    phase: .bigResting,
+                    timeRemaining: settings.bigRestDuration,
+                    completedIterations: 0
+                )
+            } else {
+                state = PomodoroState(
+                    phase: .resting,
+                    timeRemaining: settings.restDuration,
+                    completedIterations: newIterations
+                )
+            }
         case .working:
             let newIterations = state.completedIterations + 1
             if newIterations >= settings.iterationsBeforeBigRest {

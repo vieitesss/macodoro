@@ -1,8 +1,10 @@
 import SwiftUI
 import MacodoroCore
+import AppKit
 
 struct SettingsView: View {
     @EnvironmentObject var vm: TimerViewModel
+    @State private var settingsWindow: NSWindow?
 
     var body: some View {
         TabView {
@@ -11,8 +13,22 @@ struct SettingsView: View {
             alertsTab
                 .tabItem { Label("Alerts", systemImage: "bell") }
         }
+        .tint(.blue)
+        .background(WindowAccessor(window: $settingsWindow))
+        .onAppear(perform: bringSettingsWindowToFront)
+        .onChange(of: settingsWindow) { _, _ in
+            bringSettingsWindowToFront()
+        }
         .onChange(of: vm.settings) { _, _ in
             vm.saveSettings()
+        }
+    }
+
+    private func bringSettingsWindowToFront() {
+        DispatchQueue.main.async {
+            NSApplication.shared.activate(ignoringOtherApps: true)
+            settingsWindow?.makeKeyAndOrderFront(nil)
+            settingsWindow?.orderFrontRegardless()
         }
     }
 
@@ -46,6 +62,12 @@ struct SettingsView: View {
                     }
                 }
                 .pickerStyle(.radioGroup)
+                .tint(.blue)
+            }
+
+            Section("Warnings") {
+                Toggle("Notify one minute before rest ends", isOn: $vm.settings.oneMinuteRestWarningEnabled)
+                    .tint(.blue)
             }
         }
         .formStyle(.grouped)
@@ -55,6 +77,26 @@ struct SettingsView: View {
 }
 
 // MARK: - Helpers
+
+private struct WindowAccessor: NSViewRepresentable {
+    @Binding var window: NSWindow?
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        let binding = _window
+        DispatchQueue.main.async {
+            binding.wrappedValue = view.window
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        let binding = _window
+        DispatchQueue.main.async {
+            binding.wrappedValue = nsView.window
+        }
+    }
+}
 
 private struct CountStepper: View {
     let label: String

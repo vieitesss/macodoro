@@ -67,10 +67,12 @@ struct PomodoroTimerTests {
         #expect(timer.state == .initial)
     }
 
-    @Test func skipWhenIdleDoesNothing() {
+    @Test func skipWhenIdleGoesToResting() {
         let timer = makeTimer()
         timer.skip()
-        #expect(timer.state.phase == .idle)
+        #expect(timer.state.phase == .resting)
+        #expect(timer.state.timeRemaining == settings.restDuration)
+        #expect(timer.state.completedIterations == 1)
     }
 
     @Test func updatedSettingsTakeEffectOnNextPhase() {
