@@ -75,6 +75,11 @@ final class TimerViewModel: ObservableObject {
         isRunning = false
     }
 
+    func restartTimer() {
+        suppressNextPhaseAlert = true
+        timer.restartTimer()
+    }
+
     func skip() {
         suppressNextPhaseAlert = true
         timer.skip()

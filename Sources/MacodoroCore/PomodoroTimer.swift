@@ -68,6 +68,37 @@ public final class PomodoroTimer {
         notify()
     }
 
+    /// Restarts the timer for the current phase only.
+    /// Keeps the same phase and iteration count, but resets time to full duration.
+    public func restartTimer() {
+        let wasRunning = timer != nil
+        timer?.invalidate()
+        timer = nil
+
+        let duration: TimeInterval
+        switch state.phase {
+        case .idle:
+            duration = settings.workDuration
+        case .working:
+            duration = settings.workDuration
+        case .resting:
+            duration = settings.restDuration
+        case .bigResting:
+            duration = settings.bigRestDuration
+        }
+
+        state = PomodoroState(
+            phase: state.phase,
+            timeRemaining: duration,
+            completedIterations: state.completedIterations
+        )
+
+        if wasRunning {
+            scheduleTimer()
+        }
+        notify()
+    }
+
     /// Advances to the next phase.
     /// Keeps running only if the timer was already active.
     public func skip() {

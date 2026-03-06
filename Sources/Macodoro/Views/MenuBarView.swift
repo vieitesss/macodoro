@@ -87,28 +87,65 @@ struct MenuBarView: View {
     }
 
     private var controls: some View {
-        HStack(spacing: 20) {
-            Button(action: vm.reset) {
-                Image(systemName: "arrow.counterclockwise")
-                    .font(.title3)
-            }
-            .buttonStyle(.plain)
-            .help("Reset")
+        HStack(spacing: 10) {
+            controlButton(
+                title: "Cycle",
+                systemImage: "arrow.counterclockwise",
+                imageFont: .title3,
+                helpText: "Restart entire cycle",
+                action: vm.reset
+            )
 
-            Button(action: vm.isRunning ? vm.pause : vm.start) {
-                Image(systemName: vm.isRunning ? "pause.fill" : "play.fill")
-                    .font(.title)
-            }
-            .buttonStyle(.plain)
-            .help(vm.isRunning ? "Pause" : "Start")
+            controlButton(
+                title: "Timer",
+                systemImage: "arrow.clockwise",
+                imageFont: .title3,
+                helpText: "Restart current timer",
+                action: vm.restartTimer
+            )
 
-            Button(action: vm.skip) {
-                Image(systemName: "forward.end.fill")
-                    .font(.title3)
-            }
-            .buttonStyle(.plain)
-            .help("Skip to next phase")
+            controlButton(
+                title: vm.isRunning ? "Pause" : "Start",
+                systemImage: vm.isRunning ? "pause.fill" : "play.fill",
+                imageFont: .title,
+                helpText: vm.isRunning ? "Pause timer" : "Start timer",
+                action: vm.isRunning ? vm.pause : vm.start
+            )
+
+            controlButton(
+                title: "Skip",
+                systemImage: "forward.end.fill",
+                imageFont: .title3,
+                helpText: "Skip to next phase",
+                action: vm.skip
+            )
         }
+    }
+
+    private func controlButton(
+        title: String,
+        systemImage: String,
+        imageFont: Font,
+        helpText: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                Image(systemName: systemImage)
+                    .font(imageFont)
+                    .frame(height: 20)
+
+                Text(title)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 4)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(helpText)
     }
 
     private var footerButtons: some View {
